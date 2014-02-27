@@ -9,7 +9,7 @@ import select
 import socket
 import logging
 
-from common import methods, russian_alphabet, translit_alphabet, PORT
+from common import methods, russian_alphabet, translit_alphabet, PORT, connection_timeout
 
 LOG = logging.getLogger(__name__)
 
@@ -85,7 +85,7 @@ class ConnectionThread(Thread):
         count = 0
         while 1:
             count += 1
-            ready_to_read, _, error = select.select(rlist, [], [], 3)
+            ready_to_read, _, error = select.select(rlist, [], [], connection_timeout)
             if error:
                 break
             if ready_to_read:

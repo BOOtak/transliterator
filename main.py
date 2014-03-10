@@ -51,7 +51,6 @@ class ConnectionThread(Thread):
             self.connections.update({client_socket: client_address})
 
     def parse_request(self, request):
-        assert request
 
         headers = {}
 
@@ -79,32 +78,29 @@ class ConnectionThread(Thread):
         LOG.debug("Thread {0} started".format(self.thread_number))
         LOG.debug("{0}: Socket: {1}, address: {2}".format(self.thread_number, self.client_socket, self.client_address))
         received_data = ""
-        connection_attempts = 0
-        max_connection_attempts = 3
-        while 1:
-            ready_to_read, _, error = select.select([self.client_socket], [], [], 0.3)
-            if ready_to_read:
-                received_data += self.client_socket.recv(4096)
-            elif connection_attempts >= 3:
-                break
-            else:
-                connection_attempts += 1
+
+        ready_to_read, _, _ = select.select([self.client_socket], [], [], 10)
+        if ready_to_read:
+            received_data += self.client_socket.recv(4096)
+
+        if received_data == "":
+            self.finish_thread()
+            return
 
         #LOG.debug(received_data)
 
         method, host, protocol, headers = self.parse_request(received_data)
 
         response = methods[method](host, headers=headers)
-        print response
-        tort = self.make_response_header("HTTP/1.0", response.status_code, response.reason, response.headers)
-        print tort
-        print response.content
+        response_header = self.make_response_header("HTTP/1.0", response.status_code, response.reason, response.headers)
 
-        self.client_socket.send(tort)
+        self.client_socket.send(response_header)
         self.client_socket.send(response.content)
-        self.client_socket.close()
-        LOG.debug("Thread {0} finished".format(self.thread_number))
+        self.finish_thread()
 
+    def finish_thread(self):
+        LOG.debug("Thread {0} finished".format(self.thread_number))
+        self.client_socket.close()
 
 def main():
     def unhandled_exc_log(*exc_info):

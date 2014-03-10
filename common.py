@@ -1,11 +1,18 @@
 # coding=utf-8
 from __future__ import unicode_literals
+import requests
 
 __author__ = 'kirill'
 
-methods = ['GET', 'POST', 'CONNECT']
+methods = {'GET': requests.get,
+           'POST': requests.post,
+           'PUT': requests.put,
+           'HEAD': requests.head,
+           'OPTIONS': requests.options}
 
 PORT = 34107
+
+max_attempts = 3
 
 connection_timeout = 1  # s
 

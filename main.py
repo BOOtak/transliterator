@@ -11,7 +11,7 @@ import select
 import socket
 import logging
 
-from common import russian_alphabet, translit_alphabet, PORT, connection_timeout, max_attempts, methods
+from common import transliter, PORT, connection_timeout, max_attempts, methods
 
 LOG = logging.getLogger(__name__)
 
@@ -28,6 +28,12 @@ def start_server(port=PORT):
         thread_count += 1
 
     s.close()
+
+def transliterate(text, encoding):
+    text = text.decode(encoding).encode('utf-8')
+    for russian, translit in transliter.iteritems():
+        text = text.replace(russian.encode('utf-8'), translit)
+    return text
 
 
 class ConnectionThread(Thread):
@@ -95,7 +101,14 @@ class ConnectionThread(Thread):
         response_header = self.make_response_header("HTTP/1.0", response.status_code, response.reason, response.headers)
 
         self.client_socket.send(response_header)
-        self.client_socket.send(response.content)
+        content_type = response.headers['content-type']
+        content = response.content
+        if content_type:
+            if content_type.find('text/html') != -1:
+                encoding_index = content_type.find('=')
+                encoding = content_type[encoding_index + 1:]
+                content = transliterate(content, encoding)
+        self.client_socket.send(content)
         self.finish_thread()
 
     def finish_thread(self):

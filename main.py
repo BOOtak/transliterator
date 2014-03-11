@@ -1,3 +1,4 @@
+#!/usr/bin/python
 # coding=utf-8
 from __future__ import unicode_literals
 import os
@@ -18,7 +19,7 @@ LOG = logging.getLogger(__name__)
 
 def start_server(port=PORT):
     s = socket.socket()
-    s.bind(('localhost', port))
+    s.bind(('0.0.0.0', port))
     #LOG.info("Running on {0}".format(port))
     s.listen(0)
     thread_count = 0

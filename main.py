@@ -8,6 +8,7 @@ import threading
 
 __author__ = 'kirill'
 from threading import Thread, Event
+from optparse import OptionParser
 import select
 import socket
 import logging
@@ -128,7 +129,13 @@ def main():
     logger.addHandler(file_handler)
     logger.setLevel(logging.DEBUG if __debug__ else logging.WARNING)
 
-    start_server()
+    parser = OptionParser()
+    parser.add_option("-p", "--port", dest="port", 
+        help="Runs transliterator on specified port", metavar="PORT")
+    (options, args) = parser.parse_args()
+
+    # eat kaktus if forget params
+    start_server(int(options.port))
 
 
 if __name__ == '__main__':
